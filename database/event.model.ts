@@ -124,7 +124,8 @@ EventSchema.pre('save', function (next) {
 
   // Normalize date to ISO format (YYYY-MM-DD)
   if (this.isModified('date')) {
-    const parsedDate = new Date(this.date);
+    // Parse as UTC to avoid timezone shifts
+    const parsedDate = new Date(this.date + 'T00:00:00Z');
     if (isNaN(parsedDate.getTime())) {
       return next(new Error('Invalid date format. Expected ISO 8601 date.'));
     }
