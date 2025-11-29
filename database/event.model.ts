@@ -1,16 +1,12 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
+import { BaseEvent } from '@/lib/constants';
 
 // TypeScript interface for Event document
-export interface IEvent extends Document {
-  title: string;
-  slug: string;
+// Extends shared BaseEvent type to avoid type drift between UI and database
+export interface IEvent extends BaseEvent, Document {
   description: string;
   overview: string;
-  image: string;
   venue: string;
-  location: string;
-  date: string;
-  time: string;
   mode: string;
   audience: string;
   agenda: string[];
@@ -119,7 +115,8 @@ EventSchema.pre('save', function (next) {
       .replace(/[^\w\s-]/g, '') // Remove special characters
       .replace(/\s+/g, '-') // Replace spaces with hyphens
       .replace(/--+/g, '-') // Replace multiple hyphens with single hyphen
-      .trim();
+      .trim()
+      .replace(/^[-]+|[-]+$/g, ''); // Remove leading and trailing hyphens
   }
 
   // Normalize date to ISO format (YYYY-MM-DD)
@@ -139,6 +136,9 @@ EventSchema.pre('save', function (next) {
         new Error('Invalid time format. Expected HH:MM in 24-hour format.')
       );
     }
+    // Parse and normalize: pad single-digit hours to two digits (e.g., '9:30' -> '09:30')
+    const [hour, minute] = this.time.split(':');
+    this.time = `${hour.padStart(2, '0')}:${minute}`;
   }
 
   next();

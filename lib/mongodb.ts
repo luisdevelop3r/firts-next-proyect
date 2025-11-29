@@ -3,20 +3,10 @@ import mongoose from 'mongoose';
 // Extend the global object to include mongoose cache
 declare global {
   // eslint-disable-next-line no-var
-  var mongoose: {
+  var mongooseCache: {
     conn: mongoose.Connection | null;
     promise: Promise<mongoose.Connection> | null;
   };
-}
-
-// Get MongoDB URI from environment variables
-const MONGODB_URI = process.env.MONGODB_URI;
-
-// Validate that the MongoDB URI is provided
-if (!MONGODB_URI) {
-  throw new Error(
-    'Please define the MONGODB_URI environment variable inside .env.local'
-  );
 }
 
 /**
@@ -24,10 +14,10 @@ if (!MONGODB_URI) {
  * in development. This prevents connections from growing exponentially
  * during API Route usage.
  */
-let cached = global.mongoose;
+let cached = global.mongooseCache;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongooseCache = { conn: null, promise: null };
 }
 
 /**
@@ -37,6 +27,16 @@ if (!cached) {
  * @returns {Promise<mongoose.Connection>} The MongoDB connection
  */
 async function connectDB(): Promise<mongoose.Connection> {
+  // Get MongoDB URI from environment variables
+  const MONGODB_URI = process.env.MONGODB_URI;
+
+  // Validate that the MongoDB URI is provided
+  if (!MONGODB_URI) {
+    throw new Error(
+      'Please define the MONGODB_URI environment variable inside .env.local'
+    );
+  }
+
   // If a connection already exists, return it
   if (cached.conn) {
     return cached.conn;

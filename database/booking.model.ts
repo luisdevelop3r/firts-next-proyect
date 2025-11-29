@@ -24,7 +24,7 @@ const BookingSchema = new Schema<IBooking>(
       lowercase: true,
       validate: {
         validator: function (email: string): boolean {
-          // RFC 5322 compliant email regex
+          // Basic email format validation
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           return emailRegex.test(email);
         },
@@ -66,11 +66,10 @@ BookingSchema.pre('save', async function (next) {
   next();
 });
 
-// Create index on eventId for faster queries and lookups
-BookingSchema.index({ eventId: 1 });
-
-// Compound index for finding bookings by event and email
-BookingSchema.index({ eventId: 1, email: 1 });
+// Compound unique index: prevents duplicate bookings (same event + email)
+// Note: The compound index on (eventId, email) also provides efficient queries by eventId,
+// so the redundant single-field index on eventId is not needed
+BookingSchema.index({ eventId: 1, email: 1 }, { unique: true });
 
 // Export Booking model (use existing model if already compiled)
 const Booking: Model<IBooking> =
