@@ -31,10 +31,12 @@ if (!cached) {
 }
 
 /**
- * Connects to MongoDB database using Mongoose
- * Caches the connection to prevent multiple connections during development
- * 
- * @returns {Promise<mongoose.Connection>} The MongoDB connection
+ * Establishes and returns a cached Mongoose connection to MongoDB.
+ *
+ * Reuses an existing cached connection when available; otherwise opens a new
+ * connection with Mongoose buffering disabled and caches it for future calls.
+ *
+ * @returns The established `mongoose.Connection`
  */
 async function connectDB(): Promise<mongoose.Connection> {
   // If a connection already exists, return it
