@@ -1,4 +1,5 @@
-export interface Event {
+// Shared base type for Event fields used across UI and database
+export interface BaseEvent {
   title: string;
   image: string;
   slug: string;
@@ -6,6 +7,9 @@ export interface Event {
   date: string;
   time: string;
 }
+
+// UI Event type (can be extended if needed)
+export interface Event extends BaseEvent {}
 
 export const events: Event[] = [
   {
