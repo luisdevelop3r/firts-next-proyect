@@ -5,6 +5,7 @@ import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import { cacheLife } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
@@ -33,11 +34,28 @@ const EventTags = ({ tags }: { tags: string[] }) => (
   </div>
 )
 
+const SimilarEvents = async ({ slug }: { slug: string }) => {
+  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
+  
+  return (
+    <div className="mt-5">
+      <h2>Similar Events</h2>
+      <div className="events">
+        {similarEvents.length > 0 && similarEvents.map((similarEvent: IEvent) => (
+          <EventCard key={similarEvent.title} {...similarEvent} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }>}) => {
   'use cache'
   cacheLife('hours')
   const { slug } = await params;
-  const request = await fetch(`${BASE_URL}/api/events/${slug}`)
+  const request = await fetch(`${BASE_URL}/api/events/${slug}`, {
+    cache: 'force-cache'
+  })
   const response = await request.json() as { event: (IEvent & { _id: any }) | null }
 
   if (!response.event || !response.event.description) notFound()
@@ -46,8 +64,6 @@ const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }>}
   const event = response.event as IEvent & { _id: any }
   const { description, image, overview, date, time, location, mode, agenda, audience, tags, organizer } = event
   let bookings = 10
-
-  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug)
 
   return (
     <section id="event">
@@ -103,15 +119,9 @@ const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }>}
         </aside>
       </div>
 
-
-      <div className="mt-5">
-        <h2>Similar Events</h2>
-        <div className="events">
-          {similarEvents.length > 0 && similarEvents.map((similarEvent: IEvent) => (
-            <EventCard key={similarEvent.title} {...similarEvent} />
-          ))}
-        </div>
-      </div>
+      <Suspense fallback={<div className="mt-5"><h2>Similar Events</h2><p>Loading similar events...</p></div>}>
+        <SimilarEvents slug={slug} />
+      </Suspense>
     </section>
   )
 }
