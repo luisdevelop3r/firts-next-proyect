@@ -37,7 +37,7 @@ export default function RootLayout({
             <PostHogPageView />
           </Suspense>
           <Navbar />
-          <div className="absolute inset-0 z-0 h-min-screen">
+          <div className="absolute inset-0 z-[-1] h-min-screen">
             <LightRays
               raysOrigin="top-center-offset"
               raysColor="#5dfeca"
