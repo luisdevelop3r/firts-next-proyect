@@ -38,6 +38,14 @@ function PostHogPageView() {
   return null
 }
 
+function PostHogPageViewWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <PostHogPageView />
+    </Suspense>
+  )
+}
+
 export function PHProvider({ children }: { children: React.ReactNode }) {
   return (
     <PostHogProvider client={posthog}>

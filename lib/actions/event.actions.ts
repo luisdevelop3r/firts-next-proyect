@@ -14,3 +14,14 @@ export const getSimilarEventsBySlug = async (slug: string) => {
   }
 }
 
+export const getEventBySlug = async (slug: string) => {
+  try {
+    await connectDB();
+    const event = await Event.findOne({ slug: slug }).lean();
+    return event;
+  } catch (error) {
+    console.log(error);
+    throw new Error('Failed to fetch event');
+  }
+}
+

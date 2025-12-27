@@ -1,13 +1,10 @@
 import BookEvent from "@/components/BookEvent";
 import EventCard from "@/components/EventCard";
 import { IEvent } from "@/database";
-import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
-import { cacheLife } from "next/cache";
+import { getEventBySlug, getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
 const EventDetailItem = ({ icon, alt, label }: { icon: string; alt: string; label: string }) => (
     <div className="flex-row-gap-2 items-center">
@@ -50,18 +47,11 @@ const SimilarEvents = async ({ slug }: { slug: string }) => {
 };
 
 const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }>}) => {
-  'use cache'
-  cacheLife('hours')
   const { slug } = await params;
-  const request = await fetch(`${BASE_URL}/api/events/${slug}`, {
-    cache: 'force-cache'
-  })
-  const response = await request.json() as { event: (IEvent & { _id: any }) | null }
+  const event = await getEventBySlug(slug) as (IEvent & { _id: any }) | null
 
-  if (!response.event || !response.event.description) notFound()
+  if (!event || !event.description) notFound()
   
-  // TypeScript doesn't recognize notFound() as a type guard, so we assert the type
-  const event = response.event as IEvent & { _id: any }
   const { description, image, overview, date, time, location, mode, agenda, audience, tags, organizer } = event
   let bookings = 10
 
