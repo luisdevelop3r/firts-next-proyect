@@ -2,6 +2,7 @@ import BookEvent from "@/components/BookEvent";
 import EventCard from "@/components/EventCard";
 import { IEvent } from "@/database";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -33,11 +34,17 @@ const EventTags = ({ tags }: { tags: string[] }) => (
 )
 
 const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }>}) => {
+  'use cache'
+  cacheLife('hours')
   const { slug } = await params;
   const request = await fetch(`${BASE_URL}/api/events/${slug}`)
-  const { event: { description, image, overview, date, time, location, mode, agenda, audience, tags, organizer } } = await request.json()
+  const response = await request.json() as { event: (IEvent & { _id: any }) | null }
 
-  if (!description) notFound()
+  if (!response.event || !response.event.description) notFound()
+  
+  // TypeScript doesn't recognize notFound() as a type guard, so we assert the type
+  const event = response.event as IEvent & { _id: any }
+  const { description, image, overview, date, time, location, mode, agenda, audience, tags, organizer } = event
   let bookings = 10
 
   const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug)
@@ -91,13 +98,13 @@ const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }>}
               <p className="text-sm">Be the first to book your spot!</p>
             )}
 
-            <BookEvent />
+            <BookEvent eventId={event._id} slug={event.slug}/>
           </div>
         </aside>
       </div>
 
 
-      <div>
+      <div className="mt-5">
         <h2>Similar Events</h2>
         <div className="events">
           {similarEvents.length > 0 && similarEvents.map((similarEvent: IEvent) => (
